@@ -113,7 +113,7 @@ table_maker <- function(data, questionnaire, choices, weighting_function = NULL,
   sel_mul_rgx <- paste0(sel_mul, "(\\/|\\.)")
   sel_mul_extract_rgx <- paste0("(", str_c(sel_mul, collapse = "|"), ")")
   sel_mul_remove_rgx <- paste0("(", str_c(sel_mul_rgx, collapse = "|"), ")")
-
+  
   table_output <- table_output %>%
     mutate(sel_mul = str_extract(data, sel_mul_extract_rgx))
   avg_indices <- which(table_output[, 1] == "Average")
@@ -122,6 +122,8 @@ table_maker <- function(data, questionnaire, choices, weighting_function = NULL,
   match_previous <- (table_output[avg_indices - 3, "sel_mul"] == table_output[avg_indices - 1, "sel_mul"])
   match_previous[is.na(match_previous)] <- FALSE
   rem_avg_indices <- avg_indices[match_previous]
+  name_avg_indices <- avg_indices[!match_previous]
+  table_output[name_avg_indices, 1] <- "Average:"
   table_output <- table_output[-(rem_avg_indices - 1), ] %>%
     select(-sel_mul)
   
@@ -176,6 +178,6 @@ table_maker <- function(data, questionnaire, choices, weighting_function = NULL,
   
   split_rows <- table_output[,2] == main_col_name
   table_output[split_rows, 2:ncol(table_output)] <- ""
-
+  
   return(table_output)
 }

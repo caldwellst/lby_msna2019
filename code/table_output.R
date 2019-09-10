@@ -28,4 +28,4 @@ strata_output <- table_maker(data_to_analyze,
                             "strata.names")
 
 saveRDS(strata_output, "output/strata_table.RDS")
-write_csv(strata_output, "output/strata_table.csv")
+write_csv(strata_output, "output/strata_table.csv", na = "")
