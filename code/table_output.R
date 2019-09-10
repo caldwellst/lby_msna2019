@@ -19,13 +19,13 @@ data_to_analyze <- data %>%
   select_if(~ !(all(is.na(.x)) | all(. == "")))
 
 strata_output <- table_maker(data_to_analyze, 
-                            questions, 
-                            choices,
-                            weights, 
-                            labels = T, 
-                            language = "english", 
-                            "Libya", 
-                            "strata.names")
+                             questions, 
+                             choices,
+                             weights, 
+                             labels = T, 
+                             language = "english", 
+                             "Libya", 
+                             "strata.names")
 
 saveRDS(strata_output, "output/strata_table.RDS")
 write_csv(strata_output, "output/strata_table.csv", na = "")
