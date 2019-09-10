@@ -4,7 +4,6 @@ library(hypegrammaR)
 library(parallel)
 library(dplyr)
 
-
 questions <- read.csv("./input/survey.csv", stringsAsFactors = F)
 choices <- read.csv("./input/choices.csv", stringsAsFactors = F)
 data <- load_data(file = "./input/data.csv")
@@ -16,8 +15,8 @@ questionnaire <- load_questionnaire(data = data,
 analysisplan <- load_analysisplan(file = "./input/analysisplan_medians.csv")
 #analysisplan <- make_analysisplan_all_vars(df = data,questionnaire = questionnaire,repeat.for.variable = "mantika_label")
 
-kobostandards::check_input(data = data, questions = questions, choices = choices ,samplingframe = sampling_frame,
-                           analysisplan = analysisplan) %>% write.csv("./output/check_input.csv")
+#kobostandards::check_input(data = data, questions = questions, choices = choices ,samplingframe = sampling_frame,
+#                           analysisplan = analysisplan) %>% write.csv("./output/check_input.csv")
 
 weights <-map_to_weighting(sampling.frame = sampling_frame,
                            data.stratum.column = "strata.names",
