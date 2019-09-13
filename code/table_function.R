@@ -10,8 +10,8 @@ library(tidyverse)
 #' @param name name for overall data in the area
 #' @param ... additional stratification variables to be applied
 analyzer <- function(x, in_questionnaire, data, weighting_function = NULL, main_col_name = "Libya", ...) {
-  print(x)
   strata <- list(...)
+  strata <- unlist(strata)
   strata <- strata[!is.na(strata)]
   data <- filter(data, !is.na(!!sym(x)))
   if (is.null(weighting_function)) {

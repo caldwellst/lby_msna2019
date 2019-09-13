@@ -25,7 +25,8 @@ strata_output <- table_maker(data_to_analyze,
                              labels = T, 
                              language = "english", 
                              "Libya", 
-                             "strata.names")
+                             "sex_hoh",
+                             "displacement_status")
 
 saveRDS(strata_output, "output/strata_table.RDS")
 write_csv(strata_output, "output/strata_table.csv", na = "")
