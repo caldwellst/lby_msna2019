@@ -23,8 +23,17 @@ weighted_sum <- function(x, df, x_name = NULL, group = NULL) {
   }
   group_var <- group_vars(df)
   weights <- dm_weights(df, x_name, group_var, group)
+  
+  if (!is.null(group) & nrow(df) == length(x)) {
+    x <- x[df[[group_var]] == group]
+  }
   x <- x[!is.na(x)]
-  sum(weights * x)
+  
+  if (length(x) == 0) {
+    NA
+  } else {
+    sum(weights * x)
+  }
 }
 
 # weighted mean
@@ -34,8 +43,16 @@ weighted_mean <- function(x, df, digits = 0, x_name = NULL, group = NULL) {
   }
   group_var <- group_vars(df)
   weights <- dm_weights(df, x_name, group_var, group)
+  if (!is.null(group) & nrow(df) == length(x)) {
+    x <- x[df[[group_var]] == group]
+  }
   x <- x[!is.na(x)]
-  round(sum(weights * x) / sum(weights), digits)
+  
+  if (length(x) == 0) {
+    NA
+  } else {
+    round(sum(weights * x) / sum(weights), digits)
+  }
 }
 
 # weighted median
@@ -46,20 +63,28 @@ weighted_median <- function(x, df, x_name = NULL, group = NULL) {
   
   group_var <- group_vars(df)
   weights <- dm_weights(df, x_name, group_var, group)
+  if (!is.null(group) & nrow(df) == length(x)) {
+    x <- x[df[[group_var]] == group]
+  }
   x <- x[!is.na(x)]
-  weights <- weights[order(x)]
-  weights <- weights / sum(weights)
-  sum_wts <- cumsum(weights)
-  index <- min(which(sum_wts >= .5))
-  x[index]
+  
+  if (length(x) == 0) {
+    NA
+  } else {
+    weights <- weights[order(x)]
+    weights <- weights / sum(weights)
+    sum_wts <- cumsum(weights)
+    index <- min(which(sum_wts >= .5))
+    x[index]
+  }
 }
+
 
 # get percent response
 percent_response <- function(x, df, ..., x_name = NULL, group = NULL) {
   if (is.null(x_name)) {
     x_name <- deparse(substitute(x))
   }
-  
   group_var <- group_vars(df)
 
   weights <- dm_weights(df, x_name, group_var, group)
@@ -67,10 +92,18 @@ percent_response <- function(x, df, ..., x_name = NULL, group = NULL) {
   args <- unlist(args)
   args <- paste0("\\b", args, "\\b")
   args <- paste0("(", paste0(args, collapse = "|"), ")")
-  x <- x[!is.na(x)]
+  if (!is.null(group) & nrow(df) == length(x)) {
+    x <- x[df[[group_var]] == group]
+  }
   
-  pct <- sum(str_detect(x, args) * weights) / sum(weights)
-  round(100 * pct, 0)
+  x <- x[!is.na(x)]
+
+  if (length(x) == 0) {
+    NA
+  } else {
+    pct <- sum(str_detect(x, args) * weights) / sum(weights)
+    round(100 * pct, 0)
+  }
 }
 
 num_percent_response <- function(x, df, ..., group = NULL) {
@@ -79,10 +112,18 @@ num_percent_response <- function(x, df, ..., group = NULL) {
   weights <- dm_weights(df, x_name, group_var, group)
   args <- list(...)
   args <- unlist(args)
+  if (!is.null(group) & nrow(df) == length(x)) {
+    x <- x[df[[group_var]] == group]
+  }
   x <- x[!is.na(x)]
-  pct <- sum((x %in% args) * weights) / sum(weights)
-  round(100 * pct, 0)
+  if (length(x) == 0) {
+    NA
+  } else {
+    pct <- sum((x %in% args) * weights) / sum(weights)
+    round(100 * pct, 0)
+  }
 }
+
 
 # get percent of response
 select_percents <- function(x, n, df, survey_sheet, choice_sheet, return_what, language = "english", exclude = NULL, x_name = NULL, group = NULL) {
@@ -93,40 +134,50 @@ select_percents <- function(x, n, df, survey_sheet, choice_sheet, return_what, l
   group_var <- group_vars(df)
   weights <- dm_weights(df, x_name, group_var, group)
   # basic setup
-
+  if (!is.null(group) & nrow(df) == length(x)) {
+    x <- x[df[[group_var]] == group]
+  }
   x <- x[!is.na(x)]
-
-  # Getting choices and labels
-  l_name <- filter(survey_sheet, name == x_name)$type
-  l_name <- str_remove(l_name, "(select_one |select_multiple )")
-  choices <- filter(choice_sheet, list_name == l_name)$name
-
-  if (!is.null(language)) {
-    cols <- names(choice_sheet)
-    col <- str_detect(cols, paste0("label[\\W]{2}(?i)", language))
-    col <- cols[col]
-  } else {
-    col <- "label"
-  }
   
-  labels <- filter(choice_sheet, list_name == l_name)[[col]]
-  # finding instances of choice options
-  choice_rgx <- str_c("\\b", choices, "\\b")
-  counts <- map_dbl(choice_rgx, ~sum(str_count(x, .x) * weights))
-
-  if (!is.null(exclude)) {
-    choices <- choices[order(counts, decreasing = T)]
-    while (choices[n] %in% exclude | is.na(choices[n])) {
-      n <- n + 1
+  if (length(x) == 0) {
+    if (return_what == "label") {
+      NA_character_
+    } else {
+      NA_integer_
     }
-  }
-  
-  if (return_what == "label") {
-    labels <- labels[order(counts, decreasing = T)]
-    labels[n]
-  } else if (return_what == "percent") {
-    counts <- counts[order(counts, decreasing = T)]
-    round(100 * (counts[n] / sum(weights)), 0)
+  } else {
+    # Getting choices and labels
+    l_name <- filter(survey_sheet, name == x_name)$type
+    l_name <- str_remove(l_name, "(select_one |select_multiple )")
+    choices <- filter(choice_sheet, list_name == l_name)$name
+    
+    if (!is.null(language)) {
+      cols <- names(choice_sheet)
+      col <- str_detect(cols, paste0("label[\\W]{2}(?i)", language))
+      col <- cols[col]
+    } else {
+      col <- "label"
+    }
+    
+    labels <- filter(choice_sheet, list_name == l_name)[[col]]
+    # finding instances of choice options
+    choice_rgx <- str_c("\\b", choices, "\\b")
+    counts <- map_dbl(choice_rgx, ~sum(str_count(x, .x) * weights))
+    
+    if (!is.null(exclude)) {
+      choices <- choices[order(counts, decreasing = T)]
+      while (choices[n] %in% exclude | is.na(choices[n])) {
+        n <- n + 1
+      }
+    }
+    
+    if (return_what == "label") {
+      labels <- labels[order(counts, decreasing = T)]
+      labels[n]
+    } else if (return_what == "percent") {
+      counts <- counts[order(counts, decreasing = T)]
+      round(100 * (counts[n] / sum(weights)), 0)
+    }
   }
 }
 
@@ -162,9 +213,3 @@ str_concat <- function(val, ...) {
   string[string == ""] <- NA
   string
 }
-
-
-max_ind_n <- function(n) function(x) order(x, decreasing = TRUE)[n]
-max_ind1 <- max_ind_n(1)
-max_ind2 <- max_ind_n(2)
-max_ind3 <- max_ind_n(3)
